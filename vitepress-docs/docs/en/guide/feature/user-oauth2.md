@@ -1,7 +1,7 @@
 # OAuth2 Third-Party Login
 
 > [!WARNING] Note
-> Third-party login will automatically register an account using the user's email (emails with the same address will be considered the same account)
+> Third-party login will automatically register an account using the user's email (emails with the same address will be considered the same account), unless the provider's auto-register switch is turned off (see [Invite-Only Sign-In](#invite-only-sign-in))
 >
 > This account is the same as a registered account and can also set a password through the forgot password feature
 
@@ -91,6 +91,24 @@ When OAuth2 returns a non-standard email format (e.g., returns a user ID), you c
 ### Email Address Allow List
 
 When enabled, only emails from specified domains can login.
+
+### Invite-Only Sign-In
+
+Each provider has an **Auto-register new users on first sign-in** switch, enabled by default.
+
+- Enabled (default): the first OAuth2 sign-in creates an account, as before.
+- Disabled: OAuth2 sign-in only works for accounts that already exist. Create the user first in `Admin -> Users` with the person's email address; when they sign in through the provider, they are logged into that account. Unknown emails get a `403` and no account is created.
+
+Existing accounts are matched case-insensitively, so an admin-created `Mom@Example.com` and a provider-returned `mom@example.com` are the same user.
+
+> [!NOTE]
+> The domain allow list filters by domain only. Allowing `gmail.com` lets every Gmail user sign in, so use invite-only mode when you need a fixed list of people.
+
+### Require Verified Email
+
+When **Require the provider to verify the email** is enabled, sign-in is rejected with `403` unless the provider's user info contains a top-level `email_verified` value of `true` (or the string `"true"`). A missing claim is treated as unverified.
+
+Enable this only for OpenID Connect providers that return `email_verified` from the User Info URL, such as Google (`https://openidconnect.googleapis.com/v1/userinfo`), Authentik, or Keycloak. GitHub's user APIs do not return this claim, so enabling it for GitHub rejects every sign-in.
 
 ## Test User Login Page
 

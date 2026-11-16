@@ -49,6 +49,8 @@ export type LocaleMessages = {
     Oauth2FailedGetUserInfoMsg: string
     Oauth2FailedGetAccessTokenMsg: string
     Oauth2FailedGetUserEmailMsg: string
+    Oauth2EmailNotVerifiedMsg: string
+    Oauth2UserNotInvitedMsg: string
 
     PasswordChangeDisabledMsg: string
     NewPasswordRequiredMsg: string

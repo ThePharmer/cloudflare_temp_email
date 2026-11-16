@@ -6,6 +6,15 @@ import { getJsonSetting, getMailDomain, getStringValue, getUserRoles, includesDo
 import { UserOauth2Settings } from '../models';
 import { CONSTANTS } from '../constants';
 
+// OIDC providers (Google, Authentik, Keycloak, ...) return a top-level `email_verified` claim.
+// Missing or any value other than true / "true" counts as unverified.
+const isEmailVerified = (userInfo: unknown): boolean => {
+    if (!userInfo || typeof userInfo !== 'object' || Array.isArray(userInfo)) {
+        return false;
+    }
+    const verified = (userInfo as { email_verified?: unknown }).email_verified;
+    return verified === true || verified === 'true';
+};
 
 export default {
     getOauth2LoginUrl: async (c: Context<HonoCustomType>) => {
@@ -111,20 +120,34 @@ export default {
         if (setting.enableMailAllowList && !includesDomain(setting.mailAllowList, mailDomain)) {
             return c.text(`${msgs.UserMailDomainMustInMsg} ${JSON.stringify(setting.mailAllowList, null, 2)}`, 400)
         }
+        // require the provider to report the email as verified (OIDC `email_verified` claim)
+        if (setting.requireEmailVerified && !isEmailVerified(userInfo)) {
+            return c.text(msgs.Oauth2EmailNotVerifiedMsg, 403);
+        }
+        // match an existing account case-insensitively so an admin-created
+        // `Mom@Example.com` and a provider-returned `mom@example.com` are the same user
+        const existingUser = await c.env.DB.prepare(
+            `SELECT user_email FROM users WHERE lower(user_email) = lower(?) ORDER BY id LIMIT 1`
+        ).bind(email).first<{ user_email: string }>();
+        // invite-only: when auto-register is disabled, only pre-created users may sign in
+        if (!existingUser && setting.enableAutoRegister === false) {
+            return c.text(msgs.Oauth2UserNotInvitedMsg, 403);
+        }
+        const userEmail = existingUser?.user_email ?? email;
         // insert or update user
         const { success } = await c.env.DB.prepare(
             `INSERT INTO users (user_email, password, user_info)`
             + ` VALUES (?, '', ?)`
             + ` ON CONFLICT(user_email) DO UPDATE SET updated_at = datetime('now')`
         ).bind(
-            email, JSON.stringify(userInfo)
+            userEmail, JSON.stringify(userInfo)
         ).run();
         if (!success) {
             return c.text(msgs.FailedToRegisterMsg, 500)
         }
         const { id: user_id } = await c.env.DB.prepare(
             `SELECT id FROM users where user_email = ?`
-        ).bind(email).first() || {};
+        ).bind(userEmail).first() || {};
         if (!user_id) {
             return c.text(msgs.UserNotFoundMsg, 400)
         }
@@ -147,7 +170,7 @@ export default {
         }
         // create jwt
         const jwt = await Jwt.sign({
-            user_email: email,
+            user_email: userEmail,
             user_id: user_id,
             // 90 days expire in seconds
             exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,

@@ -187,6 +187,10 @@ export type UserOauth2Settings = {
     scope: string;
     enableMailAllowList?: boolean | undefined;
     mailAllowList?: string[] | undefined;
+    // false = invite-only: unknown users are rejected; unset/true keeps auto-registration
+    enableAutoRegister?: boolean | undefined;
+    // reject sign-in unless the provider's user info has email_verified === true
+    requireEmailVerified?: boolean | undefined;
 }
 
 export type EmailRuleSettings = {

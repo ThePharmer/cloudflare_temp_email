@@ -314,6 +314,8 @@ export const ptBRMessages = {
   "views.admin.IpBlacklistSettings.enable_ip_blacklist": "Ativar Lista negra de IP",
   "views.admin.IpBlacklistSettings.enable_ip_whitelist": "Ativar Lista branca de IP (estrito)",
   "views.admin.UserOauth2Settings.enableMailAllowList": "Ativar lista branca de endereços de e-mail (editável manualmente)",
+  "views.admin.UserOauth2Settings.enableAutoRegister": "Registrar automaticamente novos usuários no primeiro login (desmarque para somente por convite: apenas usuários criados por um administrador podem entrar)",
+  "views.admin.UserOauth2Settings.requireEmailVerified": "Exigir que o provedor tenha verificado o e-mail (claim OIDC email_verified, ex.: Google)",
   "views.admin.UserSettings.enableMailAllowList": "Ativar lista branca de endereços de e-mail (editável manualmente)",
   "views.admin.UserSettings.enableMailVerify": "Habilitar verificação de e-mail (o endereço remetente deve existir no sistema, ter saldo e poder enviar normalmente)",
   "views.admin.Telegram.enableTelegramAllowList": "Ativar lista branca do Telegram (informar manualmente o Chat ID)",

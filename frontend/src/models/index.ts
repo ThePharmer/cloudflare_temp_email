@@ -16,4 +16,6 @@ export type UserOauth2Settings = {
     scope: string;
     enableMailAllowList?: boolean | undefined;
     mailAllowList?: string[] | undefined;
+    enableAutoRegister?: boolean | undefined;
+    requireEmailVerified?: boolean | undefined;
 }

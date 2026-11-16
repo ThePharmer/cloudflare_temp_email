@@ -314,6 +314,8 @@ export const esMessages = {
   "views.admin.IpBlacklistSettings.enable_ip_blacklist": "Habilitar Lista negra de IP",
   "views.admin.IpBlacklistSettings.enable_ip_whitelist": "Habilitar Lista blanca de IP (estricto)",
   "views.admin.UserOauth2Settings.enableMailAllowList": "Habilitar lista blanca de direcciones de correo (editable manualmente)",
+  "views.admin.UserOauth2Settings.enableAutoRegister": "Registrar automáticamente a los usuarios nuevos en el primer inicio de sesión (desmarcar para solo por invitación: solo los usuarios creados por un administrador pueden iniciar sesión)",
+  "views.admin.UserOauth2Settings.requireEmailVerified": "Exigir que el proveedor haya verificado el correo (claim OIDC email_verified, p. ej. Google)",
   "views.admin.UserSettings.enableMailAllowList": "Habilitar lista blanca de direcciones de correo (editable manualmente)",
   "views.admin.UserSettings.enableMailVerify": "Habilitar verificación de correo (la dirección remitente debe existir en el sistema, tener saldo y poder enviar normalmente)",
   "views.admin.Telegram.enableTelegramAllowList": "Habilitar lista blanca de Telegram (introduce manualmente el Chat ID)",

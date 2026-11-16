@@ -10,6 +10,7 @@
 
 ### Features
 
+- feat: |OAuth2| Add a per-provider invite-only switch (turn off auto-register so only admin-created users can sign in, matching existing accounts case-insensitively) and an option to require the provider's `email_verified` claim
 - feat: |Mail Forwarding| Add recipient address regex filters to forwarding rules, reusing internal delivery with any/all matching
 - feat: |Mailbox Login| Keep session-token access with expiry details, hiding legacy credential contents and blocking legacy cache switches in password-only mode while retaining cache removal
 - feat: |Mailbox Sessions| Extend renewable 30-day JWT issuance to mailbox creation and authorized user, admin, and Telegram access
