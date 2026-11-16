@@ -314,7 +314,7 @@ export const jaMessages = {
   "views.admin.IpBlacklistSettings.enable_ip_blacklist": "IPブラックリストを有効化",
   "views.admin.IpBlacklistSettings.enable_ip_whitelist": "IPホワイトリストを有効化（厳格）",
   "views.admin.UserOauth2Settings.enableMailAllowList": "メールアドレス許可リストを有効化 (手動入力可)",
-  "views.admin.UserOauth2Settings.enableAutoRegister": "初回ログイン時に新規ユーザーを自動登録 (オフにすると招待制: 管理者が作成したユーザーのみログイン可能)",
+  "views.admin.UserOauth2Settings.enableAutoRegister": "初回ログイン時に新規ユーザーを自動登録 (オフにすると招待制: 既存ユーザー (管理者が作成したユーザーなど) のみログイン可能)",
   "views.admin.UserOauth2Settings.requireEmailVerified": "プロバイダーによるメール確認を必須にする (OIDC の email_verified クレーム、例: Google)",
   "views.admin.UserSettings.enableMailAllowList": "メールアドレス許可リストを有効化 (手動入力可)",
   "views.admin.UserSettings.enableMailVerify": "メール検証を有効化 (送信元アドレスはシステム内に存在し、残高があり、正常に送信できる必要があります)",

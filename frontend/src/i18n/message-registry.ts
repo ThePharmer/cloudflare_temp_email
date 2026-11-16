@@ -1885,8 +1885,8 @@ export const MESSAGE_REGISTRY = {
       "zh": "启用邮箱格式转换"
     },
     "enableAutoRegister": {
-      "en": "Auto-register new users on first sign-in (uncheck for invite-only: only users created by an admin can sign in)",
-      "zh": "首次登录时自动注册新用户(取消勾选为仅限邀请: 只有管理员创建的用户可以登录)"
+      "en": "Auto-register new users on first sign-in (uncheck for invite-only: only existing users, e.g. created by an admin, can sign in)",
+      "zh": "首次登录时自动注册新用户(取消勾选为仅限邀请: 只有已存在的用户(例如管理员创建的)可以登录)"
     },
     "enableMailAllowList": {
       "en": "Enable Mail Address Allow List(Manually enterable)",

@@ -314,7 +314,7 @@ export const deMessages = {
   "views.admin.IpBlacklistSettings.enable_ip_blacklist": "IP-Sperrliste aktivieren",
   "views.admin.IpBlacklistSettings.enable_ip_whitelist": "IP-Freigabeliste aktivieren (streng)",
   "views.admin.UserOauth2Settings.enableMailAllowList": "Aktivieren E-Mail-Adressfreigabeliste(Manually enterable)",
-  "views.admin.UserOauth2Settings.enableAutoRegister": "Neue Benutzer bei der ersten Anmeldung automatisch registrieren (deaktivieren für Nur-Einladung: nur vom Admin angelegte Benutzer können sich anmelden)",
+  "views.admin.UserOauth2Settings.enableAutoRegister": "Neue Benutzer bei der ersten Anmeldung automatisch registrieren (deaktivieren für Nur-Einladung: nur bestehende Benutzer, z. B. vom Admin angelegte, können sich anmelden)",
   "views.admin.UserOauth2Settings.requireEmailVerified": "Verifizierte E-Mail beim Anbieter verlangen (OIDC-Claim email_verified, z. B. Google)",
   "views.admin.UserSettings.enableMailAllowList": "Aktivieren E-Mail-Adressfreigabeliste(Manually enterable)",
   "views.admin.UserSettings.enableMailVerify": "Mail-Prüfung aktivieren (die Absenderadresse muss im System vorhanden sein, Guthaben haben und normal senden können)",
