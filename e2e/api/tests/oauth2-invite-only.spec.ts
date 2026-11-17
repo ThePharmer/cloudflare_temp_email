@@ -163,7 +163,7 @@ test.describe('OAuth2 invite-only and email_verified', () => {
 
     for (const password of ['', hashPassword(''), hashPassword('guess')]) {
       const login = await request.post(`${WORKER_URL}/user_api/login`, { data: { email, password } });
-      expect(login.ok()).toBe(false);
+      expect(login.status()).toBe(400);
     }
 
     await withProvider(request, { email }, { enableAutoRegister: false }, async () => {

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { FRONTEND_URL, WORKER_URL } from '../../../fixtures/test-helpers';
+import { FRONTEND_URL, WORKER_URL, hashPassword } from '../../../fixtures/test-helpers';
 
 const legacyProvider = {
   name: 'legacy-provider',
@@ -67,9 +67,15 @@ test.describe('Admin OAuth2 invite-only settings', () => {
       sessionStorage.setItem('adminTab', 'user');
     });
     await page.goto(`${FRONTEND_URL}/en/admin`);
-    await page.getByRole('button', { name: 'Create User' }).click();
-
     const dialog = page.getByRole('dialog');
+    // type a password, then cancel: reopening must start with an empty form
+    await page.getByRole('button', { name: 'Create User' }).click();
+    await dialog.locator('.n-form-item').filter({ hasText: 'Password' }).locator('input').fill('stale-pass');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await page.getByRole('button', { name: 'Create User' }).click();
+    await expect(dialog.locator('.n-form-item').filter({ hasText: 'Password' }).locator('input')).toHaveValue('');
+
     await dialog.locator('.n-form-item').filter({ hasText: 'Account Email' }).getByRole('textbox').fill(email);
     await dialog.getByRole('button', { name: 'Create User' }).click();
     await expect(page.getByText('Success', { exact: true })).toBeVisible();
@@ -78,7 +84,10 @@ test.describe('Admin OAuth2 invite-only settings', () => {
       params: { limit: '20', offset: '0', query: email.split('@')[0] },
     });
     expect((await users.json()).results.map((u: { user_email: string }) => u.user_email)).toEqual([email]);
-    const login = await request.post(`${WORKER_URL}/user_api/login`, { data: { email, password: '' } });
-    expect(login.ok()).toBe(false);
+    // the stored password must be empty, not sha256('') which anyone could send
+    const login = await request.post(`${WORKER_URL}/user_api/login`, {
+      data: { email, password: hashPassword('') },
+    });
+    expect(login.status()).toBe(400);
   });
 });

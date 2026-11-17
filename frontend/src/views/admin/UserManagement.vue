@@ -91,6 +91,12 @@ const resetPassword = async () => {
     }
 }
 
+const openCreateUser = () => {
+    // an empty password means "no password login", so never carry one over
+    user.value = { email: "", password: "" };
+    showCreateUser.value = true;
+}
+
 const createUser = async () => {
     if (!user.value.email) {
         message.error(t('pleaseInput'));
@@ -309,7 +315,7 @@ onMounted(async () => {
                 </n-form-item-row>
                 <n-form-item-row :label="t('password')">
                     <n-input v-model:value="user.password" type="password" show-password-on="click"
-                        @keyup.enter="createUser" />
+                        :input-props="{ autocomplete: 'new-password' }" @keyup.enter="createUser" />
                 </n-form-item-row>
             </n-form>
             <template #action>
@@ -368,7 +374,7 @@ onMounted(async () => {
                         {{ t('itemCount') }}: {{ itemCount }}
                     </template>
                     <template #suffix>
-                        <n-button @click="showCreateUser = true" size="small" tertiary type="primary"
+                        <n-button @click="openCreateUser" size="small" tertiary type="primary"
                             style="margin-left: 10px">
                             {{ t('createUser') }}
                         </n-button>
