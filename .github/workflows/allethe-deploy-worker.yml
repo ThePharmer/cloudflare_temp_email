@@ -1,0 +1,122 @@
+# Deploys the allethe mail Worker (UI, API and inbound email handler) to
+# Cloudflare. Manual only: a bad deploy makes inbound mail bounce, so it never
+# deploys on merge. Run it from the Actions tab on `main`.
+#
+# The worker-production environment only accepts `main` and holds:
+#   secrets   CLOUDFLARE_WORKER_DEPLOY_TOKEN, JWT_SECRET, ADMIN_PASSWORDS
+# and the repo holds the variable CLOUDFLARE_ACCOUNT_ID.
+# Its Deployments view is the record of what is live.
+#
+# Non-secret config is committed in worker/wrangler.allethe.toml.
+# After an upstream upgrade, run the DB migration from Admin -> Quick Setup.
+name: Deploy allethe worker
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-production
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: worker/package.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: |
+            worker/pnpm-lock.yaml
+            frontend/pnpm-lock.yaml
+      - name: Worker lint
+        working-directory: worker
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+      - name: Frontend tests and build
+        working-directory: frontend
+        env:
+          VITE_DEFAULT_LANG: en
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm build:pages
+      - name: Worker dry run
+        working-directory: worker
+        run: pnpm exec wrangler deploy -c wrangler.allethe.toml --dry-run --outdir dist --minify
+
+  deploy:
+    name: Deploy to Cloudflare
+    needs: check
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment:
+      name: worker-production
+      url: https://mail.allethe.com/health_check
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: worker/package.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: |
+            worker/pnpm-lock.yaml
+            frontend/pnpm-lock.yaml
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_DEFAULT_LANG: en
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build:pages
+      - name: Install worker dependencies
+        working-directory: worker
+        run: pnpm install --frozen-lockfile
+      # JSON, not .env: ADMIN_PASSWORDS is itself a JSON array string
+      - name: Write Worker secrets file
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ADMIN_PASSWORDS: ${{ secrets.ADMIN_PASSWORDS }}
+        run: |
+          if [ -z "$JWT_SECRET" ] || [ -z "$ADMIN_PASSWORDS" ]; then
+            echo "JWT_SECRET and ADMIN_PASSWORDS must be set in the worker-production environment" >&2
+            exit 1
+          fi
+          echo "$ADMIN_PASSWORDS" | jq -e 'type == "array" and length > 0 and all(type == "string")' > /dev/null \
+            || { echo 'ADMIN_PASSWORDS must be a JSON array of strings, e.g. ["a-long-password"]' >&2; exit 1; }
+          umask 077
+          jq -n --arg jwt "$JWT_SECRET" --arg admin "$ADMIN_PASSWORDS" \
+            '{JWT_SECRET: $jwt, ADMIN_PASSWORDS: $admin}' > "$RUNNER_TEMP/worker-secrets.json"
+      - name: wrangler deploy
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKER_DEPLOY_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: >-
+          pnpm exec wrangler deploy -c wrangler.allethe.toml --minify
+          --secrets-file "$RUNNER_TEMP/worker-secrets.json"
+          --message "GitHub Actions run ${{ github.run_id }}, commit ${{ github.sha }}"
+      - name: Remove Worker secrets file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/worker-secrets.json"
+      - name: Health check
+        run: |
+          body=$(curl -fsS --retry 5 --retry-delay 3 https://mail.allethe.com/health_check)
+          echo "$body"
+          [ "$body" = "OK" ]

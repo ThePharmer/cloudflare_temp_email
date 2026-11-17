@@ -1,0 +1,46 @@
+# Deployment config for mail.allethe.com. Committed so every change is
+# reviewed in a PR. Deployed only by .github/workflows/allethe-deploy-worker.yml.
+#
+# Secrets are NOT in this file: JWT_SECRET and ADMIN_PASSWORDS live in the
+# `worker-production` GitHub environment and are uploaded on each deploy.
+# Never add them to [vars] below.
+#
+# keep_vars is intentionally unset: [vars] is the complete set of plain-text
+# vars, and anything set in the dashboard is replaced on deploy.
+name = "allethe-mail"
+main = "src/worker.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = [ "nodejs_compat" ]
+
+routes = [
+  { pattern = "mail.allethe.com", custom_domain = true },
+]
+
+# UI and API on one Worker
+[assets]
+directory = "../frontend/dist/"
+binding = "ASSETS"
+run_worker_first = true
+
+# Daily cleanup; the retention window is set in Admin -> Maintenance
+[triggers]
+crons = [ "0 0 * * *" ]
+
+[vars]
+DEFAULT_LANG = "en"
+PREFIX = ""
+DOMAINS = ["allethe.com"]
+DEFAULT_DOMAINS = ["allethe.com"]
+# Signed-in users may create and delete their own addresses...
+ENABLE_USER_CREATE_EMAIL = true
+ENABLE_USER_DELETE_EMAIL = true
+# ...but anonymous visitors may not create any
+DISABLE_ANONYMOUS_USER_CREATE_EMAIL = true
+# Mail over 2 MB keeps its text but drops attachments (D1 row size limit)
+REMOVE_EXCEED_SIZE_ATTACHMENT = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "allethe-mail"
+# Fill in after creating the database (Workers & Pages -> D1). Not a secret.
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
