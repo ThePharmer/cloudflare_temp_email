@@ -32,8 +32,13 @@ const newOauth2Type = ref('custom')
 
 const fetchData = async () => {
     try {
-        const res = await api.fetch(`/admin/user_oauth2_settings`)
-        Object.assign(userOauth2Settings.value, res)
+        const res = await api.fetch(`/admin/user_oauth2_settings`) as UserOauth2Settings[]
+        // unset enableAutoRegister keeps the legacy auto-register behavior
+        Object.assign(userOauth2Settings.value, res.map((item) => ({
+            ...item,
+            enableAutoRegister: item.enableAutoRegister !== false,
+            requireEmailVerified: !!item.requireEmailVerified,
+        })))
     } catch (error) {
         message.error((error as Error).message || "error");
     }
@@ -104,6 +109,8 @@ const addNewOauth2 = () => {
         userEmailReplace: '',
         enableMailAllowList: false,
         mailAllowList: constant.COMMOM_MAIL,
+        enableAutoRegister: true,
+        requireEmailVerified: false,
         ...template,
     } as UserOauth2Settings)
     newOauth2Name.value = ''
@@ -241,6 +248,16 @@ onMounted(async () => {
                                     </template>
                                 </n-select>
                             </n-input-group>
+                        </n-form-item-row>
+                        <n-form-item-row :label="t('enableAutoRegister')">
+                            <n-checkbox v-model:checked="item.enableAutoRegister">
+                                {{ t('enable') }}
+                            </n-checkbox>
+                        </n-form-item-row>
+                        <n-form-item-row :label="t('requireEmailVerified')">
+                            <n-checkbox v-model:checked="item.requireEmailVerified">
+                                {{ t('enable') }}
+                            </n-checkbox>
                         </n-form-item-row>
                     </n-form>
                 </n-collapse-item>

@@ -91,8 +91,14 @@ const resetPassword = async () => {
     }
 }
 
+const openCreateUser = () => {
+    // an empty password means "no password login", so never carry one over
+    user.value = { email: "", password: "" };
+    showCreateUser.value = true;
+}
+
 const createUser = async () => {
-    if (!user.value.email || !user.value.password) {
+    if (!user.value.email) {
         message.error(t('pleaseInput'));
         return;
     }
@@ -101,7 +107,8 @@ const createUser = async () => {
             method: "POST",
             body: JSON.stringify({
                 email: user.value.email,
-                password: await hashPassword(user.value.password)
+                // empty password = no password login (e.g. invite-only OAuth2 users)
+                password: user.value.password ? await hashPassword(user.value.password) : ''
             })
         });
         message.success(t('success'));
@@ -306,9 +313,9 @@ onMounted(async () => {
                 <n-form-item-row :label="t('email')" required>
                     <n-input v-model:value="user.email" />
                 </n-form-item-row>
-                <n-form-item-row :label="t('password')" required>
+                <n-form-item-row :label="t('password')">
                     <n-input v-model:value="user.password" type="password" show-password-on="click"
-                        @keyup.enter="createUser" />
+                        :input-props="{ autocomplete: 'new-password' }" @keyup.enter="createUser" />
                 </n-form-item-row>
             </n-form>
             <template #action>
@@ -367,7 +374,7 @@ onMounted(async () => {
                         {{ t('itemCount') }}: {{ itemCount }}
                     </template>
                     <template #suffix>
-                        <n-button @click="showCreateUser = true" size="small" tertiary type="primary"
+                        <n-button @click="openCreateUser" size="small" tertiary type="primary"
                             style="margin-left: 10px">
                             {{ t('createUser') }}
                         </n-button>

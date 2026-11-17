@@ -1884,6 +1884,10 @@ export const MESSAGE_REGISTRY = {
       "en": "Enable Email Format",
       "zh": "启用邮箱格式转换"
     },
+    "enableAutoRegister": {
+      "en": "Auto-register new users on first sign-in (uncheck for invite-only: only existing users, e.g. created by an admin, can sign in)",
+      "zh": "首次登录时自动注册新用户(取消勾选为仅限邀请: 只有已存在的用户(例如管理员创建的)可以登录)"
+    },
     "enableMailAllowList": {
       "en": "Enable Mail Address Allow List(Manually enterable)",
       "zh": "启用邮件地址白名单(可手动输入, 回车增加)"
@@ -1911,6 +1915,10 @@ export const MESSAGE_REGISTRY = {
     "oauth2Type": {
       "en": "Oauth2 Type",
       "zh": "Oauth2 类型"
+    },
+    "requireEmailVerified": {
+      "en": "Require the provider to verify the email (OIDC email_verified claim, e.g. Google)",
+      "zh": "要求提供商已验证邮箱(OIDC email_verified 字段, 例如 Google)"
     },
     "save": {
       "en": "Save",

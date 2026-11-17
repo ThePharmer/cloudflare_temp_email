@@ -51,6 +51,8 @@ const messages: LocaleMessages = {
     Oauth2FailedGetUserInfoMsg: "Failed to get user info from Oauth2 provider",
     Oauth2FailedGetAccessTokenMsg: "Failed to get access token from Oauth2 provider",
     Oauth2FailedGetUserEmailMsg: "Failed to get user email from Oauth2 provider",
+    Oauth2EmailNotVerifiedMsg: "The Oauth2 provider has not verified this email address",
+    Oauth2UserNotInvitedMsg: "This account has not been invited, please contact the administrator",
 
     PasswordChangeDisabledMsg: "Password change is disabled",
     NewPasswordRequiredMsg: "New password is required",

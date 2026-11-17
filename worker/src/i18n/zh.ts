@@ -51,6 +51,8 @@ const messages: LocaleMessages = {
     Oauth2FailedGetUserInfoMsg: "从 Oauth2 提供商获取用户信息失败",
     Oauth2FailedGetAccessTokenMsg: "从 Oauth2 提供商获取访问令牌失败",
     Oauth2FailedGetUserEmailMsg: "从 Oauth2 提供商获取用户邮箱失败",
+    Oauth2EmailNotVerifiedMsg: "Oauth2 提供商未验证此邮箱地址",
+    Oauth2UserNotInvitedMsg: "该账号未被邀请，请联系管理员",
 
     PasswordChangeDisabledMsg: "密码修改已禁用",
     NewPasswordRequiredMsg: "新密码不能为空",
