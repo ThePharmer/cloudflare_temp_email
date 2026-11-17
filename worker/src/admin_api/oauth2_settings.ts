@@ -22,6 +22,12 @@ async function saveUserOauth2Settings(c: Context<HonoCustomType>): Promise<Respo
         if (setting.enableMailAllowList && (setting.mailAllowList?.length || 0) < 1) {
             return c.text(`${setting.name} is missing mail allow list`, 400);
         }
+        // these gate sign-in, so reject values like "false" that would silently fail open
+        for (const key of ['enableAutoRegister', 'requireEmailVerified'] as const) {
+            if (setting[key] !== undefined && typeof setting[key] !== 'boolean') {
+                return c.text(`${setting.name} ${key} must be a boolean`, 400);
+            }
+        }
     }
     await saveSetting(c, CONSTANTS.OAUTH2_SETTINGS_KEY, JSON.stringify(settings));
     return c.json({ success: true })

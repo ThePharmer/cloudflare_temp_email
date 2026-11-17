@@ -124,16 +124,22 @@ export default {
         if (setting.requireEmailVerified && !isEmailVerified(userInfo)) {
             return c.text(msgs.Oauth2EmailNotVerifiedMsg, 403);
         }
-        // match an existing account case-insensitively so an admin-created
-        // `Mom@Example.com` and a provider-returned `mom@example.com` are the same user
-        const existingUser = await c.env.DB.prepare(
-            `SELECT user_email FROM users WHERE lower(user_email) = lower(?) ORDER BY id LIMIT 1`
-        ).bind(email).first<{ user_email: string }>();
-        // invite-only: when auto-register is disabled, only pre-created users may sign in
-        if (!existingUser && setting.enableAutoRegister === false) {
-            return c.text(msgs.Oauth2UserNotInvitedMsg, 403);
+        let userEmail = email;
+        // invite-only: when auto-register is disabled, only existing users may sign in.
+        // Prefer an exact match, then fall back to a case-insensitive one so an admin-created
+        // `Mom@Example.com` and a provider-returned `mom@example.com` are the same user.
+        if (setting.enableAutoRegister === false) {
+            const existingUser = await c.env.DB.prepare(
+                `SELECT user_email FROM users WHERE user_email = ?`
+            ).bind(email).first<{ user_email: string }>()
+                ?? await c.env.DB.prepare(
+                    `SELECT user_email FROM users WHERE lower(user_email) = lower(?) ORDER BY id LIMIT 1`
+                ).bind(email).first<{ user_email: string }>();
+            if (!existingUser) {
+                return c.text(msgs.Oauth2UserNotInvitedMsg, 403);
+            }
+            userEmail = existingUser.user_email;
         }
-        const userEmail = existingUser?.user_email ?? email;
         // insert or update user
         const { success } = await c.env.DB.prepare(
             `INSERT INTO users (user_email, password, user_info)`

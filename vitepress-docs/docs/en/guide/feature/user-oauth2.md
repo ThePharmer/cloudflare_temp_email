@@ -99,7 +99,15 @@ Each provider has an **Auto-register new users on first sign-in** switch, enable
 - Enabled (default): the first OAuth2 sign-in creates an account, as before.
 - Disabled: OAuth2 sign-in only works for accounts that already exist. Create the user first in `Admin -> Users` with the person's email address; when they sign in through the provider, they are logged into that account. Unknown emails get a `403` and no account is created.
 
-Existing accounts are matched case-insensitively, so an admin-created `Mom@Example.com` and a provider-returned `mom@example.com` are the same user.
+Leave the password empty when creating invited users. An account without a password cannot use password login, so the provider is the only way in. A password set here can be guessed through `/user_api/login`.
+
+In invite-only mode an exact email match is used first, then a case-insensitive one, so an admin-created `Mom@Example.com` and a provider-returned `mom@example.com` are the same user. With auto-register enabled, matching stays exact as before.
+
+Invite-only only covers this provider's sign-in:
+
+- Every provider has its own switch. Another provider with auto-register enabled still lets anyone in.
+- User registration in `Admin -> User Settings` must stay disabled (the default), otherwise anyone can register with a password.
+- For Google, also enable **Require the provider to verify the email**.
 
 > [!NOTE]
 > The domain allow list filters by domain only. Allowing `gmail.com` lets every Gmail user sign in, so use invite-only mode when you need a fixed list of people.
@@ -109,6 +117,8 @@ Existing accounts are matched case-insensitively, so an admin-created `Mom@Examp
 When **Require the provider to verify the email** is enabled, sign-in is rejected with `403` unless the provider's user info contains a top-level `email_verified` value of `true` (or the string `"true"`). A missing claim is treated as unverified.
 
 Enable this only for OpenID Connect providers that return `email_verified` from the User Info URL, such as Google (`https://openidconnect.googleapis.com/v1/userinfo`), Authentik, or Keycloak. GitHub's user APIs do not return this claim, so enabling it for GitHub rejects every sign-in.
+
+The claim describes the provider's `email` field. Only rely on it when `User Email Key` is `email` and email format transformation is off.
 
 ## Test User Login Page
 

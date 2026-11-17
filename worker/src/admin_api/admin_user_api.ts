@@ -69,7 +69,9 @@ export default {
     createUser: async (c: Context<HonoCustomType>) => {
         const msgs = i18n.getMessagesbyContext(c);
         const { email, password } = await c.req.json();
-        if (!email || !password) {
+        // password is optional: an account without one cannot use password login,
+        // which suits invite-only OAuth2 sign-in
+        if (!email) {
             return c.text(msgs.InvalidEmailOrPasswordMsg, 400)
         }
         // geo data
@@ -77,12 +79,12 @@ export default {
         const geoData = new GeoData(reqIp, c.req.raw.cf as any);
         const userInfo = new UserInfo(geoData, email);
         try {
-            checkUserPassword(password);
+            if (password) checkUserPassword(password);
             const { success } = await c.env.DB.prepare(
                 `INSERT INTO users (user_email, password, user_info)`
                 + ` VALUES (?, ?, ?)`
             ).bind(
-                email, password, JSON.stringify(userInfo)
+                email, password || '', JSON.stringify(userInfo)
             ).run();
             if (!success) {
                 return c.text(msgs.FailedToRegisterMsg, 500)

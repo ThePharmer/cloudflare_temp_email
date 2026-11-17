@@ -60,4 +60,25 @@ test.describe('Admin OAuth2 invite-only settings', () => {
     expect(saved[0].enableAutoRegister).toBe(false);
     expect(saved[0].requireEmailVerified).toBe(true);
   });
+  test('admin can create a user without a password', async ({ page, request }) => {
+    const email = `nopass-ui-${Date.now()}@invite.example.com`;
+    await page.addInitScript(() => {
+      localStorage.setItem('adminAuth', 'e2e-admin-pass');
+      sessionStorage.setItem('adminTab', 'user');
+    });
+    await page.goto(`${FRONTEND_URL}/en/admin`);
+    await page.getByRole('button', { name: 'Create User' }).click();
+
+    const dialog = page.getByRole('dialog');
+    await dialog.locator('.n-form-item').filter({ hasText: 'Account Email' }).getByRole('textbox').fill(email);
+    await dialog.getByRole('button', { name: 'Create User' }).click();
+    await expect(page.getByText('Success', { exact: true })).toBeVisible();
+
+    const users = await request.get(`${WORKER_URL}/admin/users`, {
+      params: { limit: '20', offset: '0', query: email.split('@')[0] },
+    });
+    expect((await users.json()).results.map((u: { user_email: string }) => u.user_email)).toEqual([email]);
+    const login = await request.post(`${WORKER_URL}/user_api/login`, { data: { email, password: '' } });
+    expect(login.ok()).toBe(false);
+  });
 });

@@ -111,9 +111,7 @@ test.describe('OAuth2 invite-only and email_verified', () => {
   test('invite-only lets an admin-created user in, matching email case-insensitively', async ({ request }) => {
     const email = uniqueEmail('invited');
     const storedEmail = email.replace(/^invited/, 'Invited');
-    const create = await request.post(`${WORKER_URL}/admin/users`, {
-      data: { email: storedEmail, password: hashPassword('invite-pass') },
-    });
+    const create = await request.post(`${WORKER_URL}/admin/users`, { data: { email: storedEmail } });
     expect(create.ok()).toBe(true);
 
     await withProvider(request, { email }, { enableAutoRegister: false }, async () => {
@@ -128,6 +126,72 @@ test.describe('OAuth2 invite-only and email_verified', () => {
     expect(users.ok()).toBe(true);
     expect((await users.json()).results).toHaveLength(1);
   });
+
+  test('invite-only prefers an exact email match over a case variant', async ({ request }) => {
+    const email = uniqueEmail('exact');
+    const variant = email.replace(/^exact/, 'Exact');
+    // the case variant is created first, so it has the lower id
+    for (const e of [variant, email]) {
+      const create = await request.post(`${WORKER_URL}/admin/users`, { data: { email: e } });
+      expect(create.ok()).toBe(true);
+    }
+
+    await withProvider(request, { email }, { enableAutoRegister: false }, async () => {
+      const res = await oauthCallback(request);
+      expect(res.status()).toBe(200);
+      expect(jwtPayload((await res.json()).jwt).user_email).toBe(email);
+    });
+  });
+
+  test('auto-register keeps exact-match behavior and ignores case variants', async ({ request }) => {
+    const email = uniqueEmail('autocase');
+    const variant = email.replace(/^autocase/, 'Autocase');
+    const create = await request.post(`${WORKER_URL}/admin/users`, { data: { email: variant } });
+    expect(create.ok()).toBe(true);
+
+    await withProvider(request, { email }, {}, async () => {
+      const res = await oauthCallback(request);
+      expect(res.status()).toBe(200);
+      expect(jwtPayload((await res.json()).jwt).user_email).toBe(email);
+    });
+  });
+
+  test('admin-created users without a password cannot use password login', async ({ request }) => {
+    const email = uniqueEmail('nopass');
+    const create = await request.post(`${WORKER_URL}/admin/users`, { data: { email } });
+    expect(create.ok()).toBe(true);
+
+    for (const password of ['', hashPassword(''), hashPassword('guess')]) {
+      const login = await request.post(`${WORKER_URL}/user_api/login`, { data: { email, password } });
+      expect(login.ok()).toBe(false);
+    }
+
+    await withProvider(request, { email }, { enableAutoRegister: false }, async () => {
+      const res = await oauthCallback(request);
+      expect(res.status()).toBe(200);
+    });
+  });
+
+  for (const key of ['enableAutoRegister', 'requireEmailVerified']) {
+    test(`saving a non-boolean ${key} is rejected`, async ({ request }) => {
+      const res = await request.post(`${WORKER_URL}/admin/user_oauth2_settings`, {
+        data: [{
+          name: 'bad-type',
+          clientID: 'bad-client',
+          clientSecret: 'bad-secret',
+          authorizationURL: 'https://idp.example.com/authorize',
+          accessTokenURL: 'https://idp.example.com/token',
+          accessTokenFormat: 'json',
+          userInfoURL: 'https://idp.example.com/userinfo',
+          redirectURL: 'https://idp.example.com/callback',
+          userEmailKey: 'email',
+          scope: 'openid email',
+          [key]: 'false',
+        }],
+      });
+      expect(res.status()).toBe(400);
+    });
+  }
 
   for (const [label, claim] of [
     ['false', { email_verified: false }],
